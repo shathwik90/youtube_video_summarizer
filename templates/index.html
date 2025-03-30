@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Video Summarizer</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      body {
+        font-family: 'Roboto', sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f8f9fa;
+        color: #333;
+      }
+      .container {
+        max-width: 700px;
+        margin: 50px auto;
+        padding: 20px;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+      h1 {
+        font-size: 2.5rem;
+        color: #007bff;
+        margin-bottom: 20px;
+      }
+      input[type="text"] {
+        width: 100%;
+        padding: 15px;
+        margin: 10px 0;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+        box-sizing: border-box;
+      }
+      button {
+        width: 100%;
+        padding: 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      .spinner {
+        display: none;
+        margin: 20px auto;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #007bff;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .output {
+        margin-top: 20px;
+        padding: 20px;
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        text-align: left;
+        font-size: 1rem;
+        line-height: 1.6;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .output h2 {
+        color: #007bff;
+        margin-top: 0;
+      }
+      .output pre {
+        background: #f1f1f1;
+        padding: 10px;
+        border-radius: 8px;
+        overflow-x: auto;
+      }
+      @media (max-width: 768px) {
+        .container {
+          margin: 20px;
+          padding: 15px;
+        }
+        h1 {
+          font-size: 1.8rem;
+        }
+        input[type="text"],
+        button {
+          font-size: 0.9rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>YouTube Video Summarizer</h1>
+      <input type="text" id="youtubeUrl" placeholder="Enter YouTube URL" />
+      <button onclick="summarize()">Generate Summary</button>
+      <div class="spinner" id="spinner"></div>
+      <div id="output" class="output"></div>
+    </div>
+    <script>
+      async function summarize() {
+        const youtubeUrl = document.getElementById("youtubeUrl").value;
+        const outputDiv = document.getElementById("output");
+        const spinner = document.getElementById("spinner");
+
+        outputDiv.innerHTML = "";
+        spinner.style.display = "block";
+
+        try {
+          const response = await fetch("/summarize", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ youtube_url: youtubeUrl }),
+          });
+
+          const data = await response.json();
+          spinner.style.display = "none";
+
+          if (response.ok) {
+            // Render the Markdown summary using marked.js
+            outputDiv.innerHTML = `
+              <h2>Summary</h2>
+              ${marked.parse(data.summary)}
+            `;
+          } else {
+            outputDiv.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+          }
+        } catch (error) {
+          spinner.style.display = "none";
+          outputDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+        }
+      }
+    </script>
+  </body>
+</html>
